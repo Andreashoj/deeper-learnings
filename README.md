@@ -1,0 +1,1 @@
+Learning 1 - how much of a difference does a connection pool really make? It's something I often just apply by to my connection configuration - here I investigate what difference in performance it really makes by having a connection vs pool vs not!
