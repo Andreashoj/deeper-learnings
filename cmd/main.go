@@ -1,9 +1,8 @@
 package main
 
 import (
-	connection_pooling_diff "andreashoj/deeper-learnings/internal/connection-pooling-diff"
 	"andreashoj/deeper-learnings/internal/db"
-	"fmt"
+	transaction_isolation_levels "andreashoj/deeper-learnings/internal/transaction-isolation-levels"
 	"log"
 	"net/http"
 
@@ -18,9 +17,10 @@ func main() {
 	}
 
 	router := chi.NewRouter()
-	fmt.Println(DB)
+	//fmt.Println(DB)
 
-	connection_pooling_diff.LearningConnectionPooling(router)
+	//connection_pooling_diff.LearningConnectionPooling(router)
+	transaction_isolation_levels.StartTransactionIsolationLevels(DB)
 
 	http.ListenAndServe(":8080", router)
 }

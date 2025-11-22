@@ -9,7 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func SeedDBS(pool, noPool *sql.DB) error {
+func SeedDBS(pool *sql.DB) error {
 	query, err := os.ReadFile("internal/connection-pooling-diff/init.sql")
 	if err != nil {
 		return fmt.Errorf("failed reading sql.init: %w", err)
@@ -20,16 +20,11 @@ func SeedDBS(pool, noPool *sql.DB) error {
 		return fmt.Errorf("failed seeding pool db from sql file: %w", err)
 	}
 
-	_, err = noPool.Exec(string(query))
-	if err != nil {
-		return fmt.Errorf("failed seeding no pool from sql file: %w", err)
-	}
-
 	return nil
 }
 
 func StartDBWithoutPool() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "internal/connection-pooling-diff/no-pool.db")
+	db, err := sql.Open("sqlite3", "internal/connection-pooling-diff/pool.db")
 	if err != nil {
 		return nil, fmt.Errorf("failed starting no pool db: %w", err)
 	}
@@ -39,7 +34,7 @@ func StartDBWithoutPool() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed pinging no pool db: %w", err)
 	}
 
-	db.SetMaxOpenConns(1)
+	//db.SetMaxOpenConns(1)
 
 	return db, nil
 }

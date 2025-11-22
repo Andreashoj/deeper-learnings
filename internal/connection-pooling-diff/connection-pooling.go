@@ -26,11 +26,6 @@ func LearningConnectionPooling(r *chi.Mux) {
 		return
 	}
 
-	if err = SeedDBS(DBPool, DBNoPool); err != nil {
-		log.Fatalf("failed seedings dbs: %s", err)
-		return
-	}
-
 	var wgPool sync.WaitGroup
 	var wgNoPool sync.WaitGroup
 
