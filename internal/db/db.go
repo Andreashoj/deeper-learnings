@@ -3,22 +3,36 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/lib/pq"
 )
 
-func CreateDB() (*sql.DB, error) {
+var DB *sql.DB
+
+func CreateDB() error {
 	connString := "user=postgres host=localhost port=5432 dbname=test sslmode=disable"
-	db, err := sql.Open("postgres", connString)
+	var err error
+	DB, err = sql.Open("postgres", connString)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed creating database connection: %w", err)
+		return fmt.Errorf("failed creating database connection: %w", err)
 	}
 
-	err = db.Ping()
+	err = DB.Ping()
 	if err != nil {
-		return nil, fmt.Errorf("failed pinging database: %w", err)
+		return fmt.Errorf("failed pinging database: %w", err)
 	}
 
-	return db, nil
+	DB.SetMaxOpenConns(20)
+	DB.SetMaxIdleConns(5)
+
+	return nil
+}
+
+func SeedDB(query string) {
+	_, err := DB.Exec(query)
+	if err != nil {
+		log.Fatalf("failed seeding database: %s", err)
+	}
 }

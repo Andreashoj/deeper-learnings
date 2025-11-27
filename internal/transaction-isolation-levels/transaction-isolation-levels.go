@@ -46,6 +46,7 @@ func incrementBalance(DB *sql.DB, isolationLevel sql.IsolationLevel, id int, amo
 	tx, err := DB.BeginTx(ctx, &sql.TxOptions{
 		Isolation: isolationLevel,
 	})
+	defer tx.Rollback()
 	if err != nil {
 		fmt.Printf("failed starting transaction: %s\n", err)
 		return fmt.Errorf("failed starting transaction: %w", err)
