@@ -23,7 +23,7 @@ func main() {
 	// transaction_isolation_levels.StartTransactionIsolationLevels(DB)
 	// transaction_deadlocks.StartTransactionDeadlock()
 	// query_profiling.StartQueryProfiling()
-	db_replication.StartDBReplication()
+	db_replication.StartDBReplication(router)
 
 	http.ListenAndServe(":8080", router)
 }
