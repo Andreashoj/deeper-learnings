@@ -1,15 +1,3 @@
-### Connection Pooling 
-- How much of a difference does a connection pool really make? It's something I often just apply by to my connection configuration - here I investigate what difference in performance it really makes by having a connection vs pool vs not!
-- I also look into different strategies to ensure how to both monitor and log a connection pools performance
+### A personal space to discover design patterns, strategies and just software engineering in general
 
-#### Findings and learnings?
-  - My first questions to myself was, what is a connection pool underneath the surface? To truly understand I had get some insight into how the connection between the program and the database really works.  
-  - Where does the Database live and how do we communicate with it?
-    - The answer to that question depends on what database is used. For this exercise I used SQLite, which lives within the process of the application—which means it lives in memory. The application then communicates with the database through the SQLite library installed as a Go module in the project. No middle man (IPC/TCP) needed for communication.
-    - Had it been a database requiring its own process, it would be very different. Most all databases besides SQLite require their own server process (service) to run—which means that the program can't directly communicate with the database but needs a middleman. Depending on where the database lives, it will be done through TCP (network communication, always done if the DB is hosted on another computer/server) or IPC (file-based communication which is faster, requires the database to be running on a process on the same computer as the program).
-  - After writing my program i first discovered that the connection pool clearly makes a difference. But, how it's used is very important and in extension to that, the configuration matters a lot aswell. I started out with having a connection with 0 configurations (this is just a Go sqlite driver default thing), but that gave me a pool with infinite connections to the database. At first I thought, that's gotta be the fastest possible approach. But the tests showed performance difference of about 500-800% compared to a pool with max 5 connections, and some idle time. So how come it performed so much worse? Would it have been not sqlite, and excessive amount of handshakes would have slowed it down - but even with sqlite, an in-process running database the overhead of having to manage locking that is equal to the amount of queries slows down the queries tremendously.
-  - Interesting patterns to ensure good performance of the database connections.. Logging, a simple check whenever a query runs that checks the stats of the connection pool ie. how many connections is being used, if there is wait time etc etc.
-  - Another cool little performance boost would be to create a queue that only allows queries equal to the amount of max connections open to run. So the program doesn't start an unnecessary amount of go routines ex, like in my program here. 
-
-### Transaction Isolation Levels
-  - 
+Written in a lower level language; Go, to avoid abstractions as much as possible
