@@ -1,3 +1,4 @@
 [build]
   cmd = "go build -o ./tmp/main ./cmd"
   bin = "./tmp/main"
+  exclude_dir = ["internal/caching-strategies/client"]

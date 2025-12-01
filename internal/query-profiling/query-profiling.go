@@ -18,7 +18,7 @@ type User struct {
 	Name string
 }
 
-func StartQueryProfiling() {
+func InsertUsersAndPosts() {
 	query := `
 		CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
@@ -55,12 +55,19 @@ func StartQueryProfiling() {
 		}
 	}
 
-	if err := getPostsAndUsersNPlus(); err != nil {
+}
+
+func StartQueryProfiling() {
+	InsertUsersAndPosts()
+
+	_, _, err := GetPostsAndUsersNPlus()
+	if err != nil {
 		fmt.Printf("failed getting posts and users with NPLUS issue: %s", err)
 		return
 	}
 
-	if err := getPostsAndUsersWithoutNPlus(); err != nil {
+	_, _, err = GetPostsAndUsersWithoutNPlus()
+	if err != nil {
 		fmt.Printf("failed getting posts and users with NPLUS issue: %s", err)
 		return
 	}
@@ -70,14 +77,14 @@ func StartQueryProfiling() {
 	// explainQuery("SELECT name FROM users WHERE id = 1")
 }
 
-func getPostsAndUsersWithoutNPlus() error {
+func GetPostsAndUsersWithoutNPlus() ([]Post, []User, error) {
 	now := time.Now()
 	posts := []Post{}
 	users := []User{}
 
 	rows, err := db.DB.Query("SELECT posts.id, posts.name, users.id, users.name FROM posts LEFT JOIN users ON posts.user_id = users.id")
 	if err != nil {
-		return fmt.Errorf("failed getting posts: %w", err)
+		return nil, nil, fmt.Errorf("failed getting posts: %w", err)
 	}
 
 	for rows.Next() {
@@ -85,7 +92,7 @@ func getPostsAndUsersWithoutNPlus() error {
 		user := User{}
 
 		if err := rows.Scan(&post.Id, &post.Name, &user.Id, &user.Name); err != nil {
-			return fmt.Errorf("failed mapping post and id: %w", err)
+			return nil, nil, fmt.Errorf("failed mapping post and id: %w", err)
 		}
 
 		posts = append(posts, post)
@@ -94,31 +101,31 @@ func getPostsAndUsersWithoutNPlus() error {
 
 	fmt.Println(time.Since(now))
 
-	return nil
+	return posts, users, nil
 }
 
-func getPostsAndUsersNPlus() error {
+func GetPostsAndUsersNPlus() ([]Post, []User, error) {
 	now := time.Now()
-	posts, err := getPosts()
+	posts, err := GetPosts()
 	if err != nil {
-		return fmt.Errorf("failed getting posts: %w", err)
+		return nil, nil, fmt.Errorf("failed getting posts: %w", err)
 	}
 
 	users := []User{}
 	for _, post := range posts {
-		user, err := getUser(post.UserID)
+		user, err := GetUser(post.UserID)
 		if err != nil {
-			return fmt.Errorf("failed getting user: %w", err)
+			return nil, nil, fmt.Errorf("failed getting user: %w", err)
 		}
 		users = append(users, *user)
 	}
 
 	fmt.Println(time.Since(now))
 
-	return nil
+	return posts, users, nil
 }
 
-func getPosts() ([]Post, error) {
+func GetPosts() ([]Post, error) {
 	rows, err := db.DB.Query("SELECT id, name, user_id FROM posts")
 	if err != nil {
 		return nil, fmt.Errorf("failed getting posts: %w", err)
@@ -138,7 +145,7 @@ func getPosts() ([]Post, error) {
 	return posts, nil
 }
 
-func getUser(id int) (*User, error) {
+func GetUser(id int) (*User, error) {
 	user := User{Id: id}
 	err := db.DB.QueryRow("SELECT name FROM users WHERE id = $1", user.Id).Scan(&user.Name)
 	if err != nil {
@@ -146,6 +153,25 @@ func getUser(id int) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func GetUsers() ([]User, error) {
+	rows, err := db.DB.Query("SELECT name FROM users")
+	if err != nil {
+		return nil, err
+	}
+
+	var users []User
+	for rows.Next() {
+		var user User
+		if err = rows.Scan(&user.Id, &user.Name); err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func explainQuery(query string) {
