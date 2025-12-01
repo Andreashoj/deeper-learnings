@@ -20,12 +20,14 @@ type User struct {
 
 func InsertUsersAndPosts() {
 	query := `
-		CREATE TABLE IF NOT EXISTS users (
+		DROP TABLE users, posts;
+
+		CREATE TABLE users (
 			id SERIAL PRIMARY KEY,
 			name VARCHAR(255) NOT NULL
 		);
 
-		CREATE TABLE IF NOT EXISTS posts (
+		CREATE TABLE posts (
 			id SERIAL PRIMARY KEY,
 			name VARCHAR(255),
 			user_id INT NOT NULL,
