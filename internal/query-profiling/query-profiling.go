@@ -14,17 +14,65 @@ type Post struct {
 }
 
 type User struct {
+	Id       int    `json:"id,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+type Permission struct {
 	Id   int
-	Name string
+	Role string
+}
+
+type Subscription struct {
+	Id        int
+	StartDate time.Time
+	EndDate   time.Time
+	Status    string
+	UserID    int
 }
 
 func InsertUsersAndPosts() {
 	query := `
-		DROP TABLE users, posts;
+		DROP TABLE IF EXISTS subscriptions;
+		DROP TABLE IF EXISTS users_permissions;
+		DROP TABLE IF EXISTS posts;
+		DROP TABLE IF EXISTS users;
+		DROP TABLE IF EXISTS permissions;
 
 		CREATE TABLE users (
 			id SERIAL PRIMARY KEY,
-			name VARCHAR(255) NOT NULL
+			name VARCHAR(255) NOT NULL,
+			username VARCHAR(255) NOT NULL,
+			password VARCHAR(255) NOT NULL
+		);
+
+		CREATE TABLE permissions (
+		    id SERIAL PRIMARY KEY,
+		    role VARCHAR(255)
+		);
+
+		CREATE TABLE users_permissions (
+		    user_id INT NOT NULL,
+		    permission_id INT NOT NULL,
+			CONSTRAINT fk_user
+				FOREIGN KEY (user_id)
+					REFERENCES users(id),
+			CONSTRAINT fk_permission
+				FOREIGN KEY (permission_id)
+					REFERENCES permissions(id)
+		);
+
+		CREATE TABLE subscriptions (
+		    id SERIAL PRIMARY KEY,
+			start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			end_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		    status VARCHAR(255) NOT NULL,
+			user_id INT NOT NULL,
+			CONSTRAINT fk_user
+				FOREIGN KEY (user_id)
+					REFERENCES users(id)
 		);
 
 		CREATE TABLE posts (
@@ -35,7 +83,6 @@ func InsertUsersAndPosts() {
 				FOREIGN KEY (user_id)
 					REFERENCES users(id)
 		);
-
 	`
 
 	_, err := db.DB.Exec(query)
@@ -45,18 +92,38 @@ func InsertUsersAndPosts() {
 	}
 
 	for i := 1; i <= 1000; i++ {
-		_, err = db.DB.Exec("INSERT INTO users (name) VALUES ($1);", i)
+		userID := i
+		permissionID := i
+		_, err = db.DB.Exec("INSERT INTO users (name, username, password) VALUES ($1, $2, $3);", userID, "anz", "tester123")
 		if err != nil {
 			fmt.Printf("failed seeding users: %s", err)
 			return
 		}
-		_, err = db.DB.Exec("INSERT INTO posts (name, user_id) VALUES ($1, $2);", i, i)
+		_, err = db.DB.Exec("INSERT INTO posts (name, user_id) VALUES ($1, $2);", i, userID)
 		if err != nil {
 			fmt.Printf("failed seeding posts: %s", err)
 			return
 		}
-	}
 
+		_, err = db.DB.Exec("INSERT INTO permissions (role) VALUES ($1);", fmt.Sprintf("role-type-%v", i))
+		if err != nil {
+			fmt.Printf("failed seeding permissions: %s", err)
+			return
+		}
+
+		_, err = db.DB.Exec("INSERT INTO users_permissions (user_id, permission_id) VALUES ($1, $2);", userID, permissionID)
+		if err != nil {
+			fmt.Printf("failed seeding users_permissions: %s", err)
+			return
+		}
+
+		nextMonth := time.Now().AddDate(0, 1, 0)
+		_, err = db.DB.Exec("INSERT INTO subscriptions (end_date, status, user_id) VALUES ($1, 'active', $2);", nextMonth, userID)
+		if err != nil {
+			fmt.Printf("failed seeding subscriptions: %s", err)
+			return
+		}
+	}
 }
 
 func StartQueryProfiling() {

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/internal/caching-strategies/caching-strategies-handler.go" value="1d2ceecc-1bb4-445f-8fdb-fe485b1d4dbc" />
+    <file url="file://$PROJECT_DIR$/internal/query-profiling/query-profiling.go" value="1d2ceecc-1bb4-445f-8fdb-fe485b1d4dbc" />
     <file url="file://$PROJECT_DIR$/internal/transaction-deadlocks/transaction-deadlocks.go" value="1d2ceecc-1bb4-445f-8fdb-fe485b1d4dbc" />
     <file url="file://$PROJECT_DIR$/internal/transaction-isolation-levels/transaction-isolation-levels.go" value="1d2ceecc-1bb4-445f-8fdb-fe485b1d4dbc" />
   </component>

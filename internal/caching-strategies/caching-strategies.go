@@ -49,6 +49,7 @@ func getUser(rdb *redisClient) {
 	rdb.recordHit()
 	fmt.Println(val)
 }
+
 func startRedisClient() *redisClient {
 	client := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6380",

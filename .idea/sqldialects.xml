@@ -4,6 +4,7 @@
     <file url="file://$PROJECT_DIR$/internal/caching-strategies/caching-strategies-handler.go" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/internal/connection-pooling-diff/connection-pooling.go" dialect="SQLite" />
     <file url="file://$PROJECT_DIR$/internal/connection-pooling-diff/init.sql" dialect="SQLite" />
+    <file url="file://$PROJECT_DIR$/internal/query-profiling/query-profiling.go" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/internal/transaction-deadlocks/transaction-deadlocks.go" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/internal/transaction-isolation-levels/seed.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/internal/transaction-isolation-levels/transaction-isolation-levels.go" dialect="PostgreSQL" />
