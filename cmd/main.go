@@ -28,6 +28,7 @@ func main() {
 	//db_replication.StartDBReplication(router)
 	//caching_strategies.StartCachingStrategies()
 	caching_strategies.StartCachingStrategiesHandler(router)
+	caching_strategies.StartRedisVsInMemory(router)
 
 	http.ListenAndServe(":8080", router)
 }

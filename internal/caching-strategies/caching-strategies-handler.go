@@ -129,7 +129,6 @@ func updateUserRole(r *chi.Mux) {
 		fmt.Printf("failed getting user res body: %s", err)
 		return
 	}
-	fmt.Println(body)
 }
 
 type UserRes struct {
