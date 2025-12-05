@@ -214,6 +214,25 @@ func GetPosts() ([]Post, error) {
 	return posts, nil
 }
 
+func CreatePost(name string, userID int) (*Post, error) {
+	post := &Post{}
+
+	err := db.DB.QueryRow(
+		"INSERT INTO posts (name, user_id) VALUES ($1, $2) RETURNING id",
+		name,
+		userID,
+	).Scan(&post.Id)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed creating post: %w", err)
+	}
+
+	post.Name = name
+	post.UserID = userID
+
+	return post, nil
+}
+
 func GetUser(id int) (*User, error) {
 	user := User{Id: id}
 	err := db.DB.QueryRow("SELECT name FROM users WHERE id = $1", user.Id).Scan(&user.Name)

@@ -28,9 +28,9 @@ func StartCacheStampedeDemo(r *chi.Mux) {
 	// How do we handle this and how could it be prevented?
 
 	// Jitter TTL [X]
-	// Refresh cache in the background when endpoint sees exp is close
+	// Refresh cache in the background when endpoint sees exp is close [X]
 	// Refresh worker
-	// Mutex lock on cache
+	// Mutex lock on cache [X]
 	// Event driven - when to update cache ?
 
 	registerDashboardEndpoints(r)
@@ -40,9 +40,11 @@ func StartCacheStampedeDemo(r *chi.Mux) {
 
 func registerDashboardEndpoints(r *chi.Mux) {
 	r.Get("/api/dashboard/post", getPosts)
-	r.Get("/api/dashboard/post-worker", getPostsWithWorker)
 	r.Get("/api/dashboard/post-mutex", getPostsWithMutex)
 	r.Get("/api/dashboard/post-event-driven", getPostsWithEventDriven)
+
+	startCachingWorkerPosts(context.Background(), "posts")
+	r.Get("/api/dashboard/post-worker", getPostsWithWorker)
 }
 
 func stampedeApiWithRequests(server *httptest.Server) {
@@ -152,13 +154,60 @@ func getPostsWithMutex(w http.ResponseWriter, r *http.Request) {
 
 	RDB.Set(r.Context(), cacheKey, postsJSON, getJitteredTTL())
 	fmt.Printf("Set posts cache")
+	return
+}
+
+// This is a specific example of a worker only updating 1 cache key - it could be also have been made with a generic approach, that updates all the cache keys in the cache client
+func startCachingWorkerPosts(ctx context.Context, cacheKey string) {
+	ticker := time.NewTicker(5 * time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Printf("stopped cache worker")
+			return
+		case <-ticker.C:
+			_, err := RDB.Get(ctx, cacheKey).Result()
+			if err == nil { // Got cache
+				fmt.Printf("success! Got posts cache")
+
+				// We check here to see if the cache expiration is low, if so, we refresh the cache in the background
+				exp := RDB.TTL(ctx, cacheKey).Val()
+				if exp < (1 * time.Minute) {
+					refreshPostsCache(ctx, cacheKey)
+				}
+
+			}
+
+			refreshPostsCache(ctx, cacheKey)
+		}
+	}
 }
 
 func getPostsWithWorker(w http.ResponseWriter, r *http.Request) {
-	// return random user
+	cacheKeyPosts := "posts"
+	_, err := RDB.Get(r.Context(), cacheKeyPosts).Result()
+	if err == nil {
+		fmt.Printf("Got expected posts data from cache")
+		return
+	}
 
+	_, err = query_profiling.GetPosts()
+	if err != nil {
+		fmt.Printf("failed getting posts: %s", err)
+		return
+	}
+
+	fmt.Printf("No cache, queried posts from DB - the worker didn't do it's job")
 }
 
 func getPostsWithEventDriven(w http.ResponseWriter, r *http.Request) {
-	// return permission
+	// Event driven is often used if data must NEVER be served stale, but the data doesn't get changed often enough that the trade off of not using cache is worth it
+	_, err := query_profiling.CreatePost("my post", 1)
+	if err != nil {
+		fmt.Printf("failed creating post: %s", err)
+		return
+	}
+
+	// Cache serves fresh data
+	refreshPostsCache(r.Context(), "posts")
 }
